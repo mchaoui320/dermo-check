@@ -18,7 +18,7 @@ interface QuestionnaireProps {
 }
 
 // Recalculating the total number of user-input stages based on constants.ts systemInstruction:
-// 0. IDENTITÉ ET ÂGE: 4 steps (Concerne, Age/Combo/Dropdown, Sexe, Pays)
+// 0. IDENTITÉ ET ÂGE: 6 stages (Concerne, Age/Combo/Dropdown, Sexe, Enceinte, Allaite, Pays)
 // 1. LOCALISATION DES LÉSIONS: up to 2 steps (Où + Autre_préciser)
 // 2. ANCIENNETÉ ET ÉVOLUTION: up to 3 steps (Depuis quand + Comment évolué + Autre_préciser)
 // 3. MORPHOLOGIE: up to 3 steps (Description + Unique/Plusieurs if "Bouton" + Autre_préciser)
@@ -28,9 +28,9 @@ interface QuestionnaireProps {
 // 7. ALIMENTATION: up to 2 steps (Alimentation + Autre_préciser)
 // 8. ANTÉCÉDENTS: up to 3 steps (Antécédents + Antécédents familiaux préciser + Autre_préciser)
 // 9. ENVIRONNEMENT ET HYGIÈNE DE VIE: up to 3 steps (Facteurs + Autre_préciser + Voyages récents préciser)
-// 10. MÉDIA (Photo): 1 step (was 2 steps for photo + video question)
-// Total maximum potential unique user inputs: 4 + 2 + 3 + 3 + 2 + 2 + 1 + 2 + 3 + 3 + 1 = 26 stages
-const TOTAL_QUESTIONNAIRE_STAGES = 26; 
+// 10. MÉDIA (Photo): 1 step
+// Total maximum potential unique user inputs: 6 + 2 + 3 + 3 + 2 + 2 + 1 + 2 + 3 + 3 + 1 = 28 stages
+const TOTAL_QUESTIONNAIRE_STAGES = 28; 
 
 // Constants for age validation, matching the AgeDropdown component
 const MIN_VALID_AGE = 18;
@@ -48,6 +48,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
     const [consultationType, setConsultationType] = useState<'self' | 'other' | null>(null);
     const [awaitingNumberInputForOption, setAwaitingNumberInputForOption] = useState<string | null>(null);
     const [showResetConfirmation, setShowResetConfirmation] = useState(false); // New state for reset confirmation
+    const [showInitialWarningPopup, setShowInitialWarningPopup] = useState(true); // State for the initial warning popup
 
     // Removed uploadedVideoFile and awaitingVideoQuestion states
 
@@ -60,6 +61,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
     const ageMonthYearDropdownMonthsRef = useRef<HTMLSelectElement>(null); // For AgeMonthYearDropdown's months select
     const ageMonthYearDropdownYearsRef = useRef<HTMLSelectElement>(null); // For AgeMonthYearDropdown's years select
     const countryDropdownRef = useRef<HTMLSelectElement>(null); // For CountryDropdown's select
+    const initialWarningModalRef = useRef<HTMLDivElement>(null); // Ref for the initial warning modal
 
     // Function to disable/enable tabIndex for elements outside modal
     const toggleTabIndexForMainContent = useCallback((enable: boolean) => {
@@ -94,7 +96,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
 
     // Effect for managing focus after AI message updates
     useEffect(() => {
-        if (!isLoading && currentAiMessage) {
+        if (!isLoading && currentAiMessage && !showInitialWarningPopup) { // Only focus if warning is dismissed
             // Find the first interactive element and focus it
             let elementToFocus: HTMLElement | null = null;
 
@@ -122,7 +124,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
                 containerRef.current.focus();
             }
         }
-    }, [isLoading, currentAiMessage, awaitingNumberInputForOption, consultationType]); // Removed awaitingVideoQuestion from dependencies
+    }, [isLoading, currentAiMessage, awaitingNumberInputForOption, consultationType, showInitialWarningPopup]); // Removed awaitingVideoQuestion from dependencies
 
     const parseAiResponse = useCallback((text: string, id: string): Message => {
         const photoRequestMatch = text.includes('[PHOTO_REQUEST]');
@@ -148,7 +150,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
         let hasNoneButton = false;
         let noneButtonText: string | undefined;
         // Keywords that should be treated as a dedicated "None" button
-        const noneKeywords = ["Je ne sais pas", "Aucun symptôme notable", "Aucun antécédent", "Aucun", "Aucun de ces facteurs"];
+        const noneKeywords = ["Je ne sais pas", "Aucun symptôme notable", "Aucun antécédent", "Aucun", "Aucun de ces facteurs", "Ignorer"]; // Added "Ignorer"
 
         // Extract specific noneButtonText for TEXT_INPUT_WITH_NONE if provided in the tag
         let noneButtonTextForTextInput: string | undefined;
@@ -298,10 +300,66 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
         }
     }, [generateResponse, parseAiResponse, setConsultationType]); // Keeping setConsultationType explicitly for stability
 
+    // Effect for initial app setup, now dependent on the warning popup state
     useEffect(() => {
-        initializeApp();
-    }, [initializeApp]);
+        if (!showInitialWarningPopup) {
+            initializeApp();
+        }
+    }, [initializeApp, showInitialWarningPopup]);
     
+    // Effect for handling the initial warning popup's focus and tab index
+    useEffect(() => {
+        if (showInitialWarningPopup) {
+            toggleTabIndexForMainContent(false);
+            const modalElement = initialWarningModalRef.current;
+            if (modalElement) {
+                const focusableElements = modalElement.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                // Type cast for safety
+                const firstElement = focusableElements[0] as HTMLElement | undefined;
+                const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement | undefined;
+
+                // Focus the first element (Close button usually)
+                firstElement?.focus();
+
+                const handleKeyDown = (event: KeyboardEvent) => {
+                    if (event.key === 'Tab') {
+                        if (event.shiftKey) { // Shift + Tab
+                            if (document.activeElement === firstElement) {
+                                lastElement?.focus();
+                                event.preventDefault();
+                            }
+                        } else { // Tab
+                            if (document.activeElement === lastElement) {
+                                firstElement?.focus();
+                                event.preventDefault();
+                            }
+                        }
+                    } else if (event.key === 'Escape') {
+                        // Do nothing on escape to force manual interaction or add close if desired
+                        // The requirement implies a strict blocking modal, but usually Esc is good for a11y.
+                        // Given "bloque toute interaction", we can leave Esc enabled or disabled.
+                        // The provided code allows Esc to close. I will keep it for usability unless strictly forbidden.
+                        // Prompt says "bloque toute interaction... un bouton Fermer... permet de le quitter".
+                        // I'll let Esc work as a courtesy.
+                        setShowInitialWarningPopup(false);
+                        toggleTabIndexForMainContent(true);
+                        if (containerRef.current) {
+                            containerRef.current.focus();
+                        }
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyDown);
+                return () => {
+                    window.removeEventListener('keydown', handleKeyDown);
+                };
+            }
+        } else {
+            toggleTabIndexForMainContent(true);
+        }
+    }, [showInitialWarningPopup, toggleTabIndexForMainContent]);
 
     const processUserAction = useCallback(async (userText: string, imageFiles?: File[] | null) => { // Removed videoFileForAnalysis
         setIsLoading(true);
@@ -416,7 +474,6 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
 
     const handleOptionSelect = (option: string) => {
         if (isLoading) return;
-        const durationOptionsNeedingNumber = ["Moins de deux jours", "Quelques jours", "Quelques semaines", "Quelques mois", "Plus d'un an"];
         
         // This is where "Depuis combien de temps" leads to a number input.
         // The text prompt in constants.ts says: "Depuis combien de temps la lésion est apparue ?" [CHOIX]Moins de deux jours[CHOIX]Quelques jours[CHOIX]Quelques semaines[CHOIX]Quelques mois[CHOIX]Plus d’un an
@@ -618,7 +675,8 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
     // Fix: Wrap the main JSX content of the `Questionnaire` component in a `return` statement.
     return (
         <>
-            {currentAiMessage && !currentAiMessage.isFinalReport ? (
+            {/* The main questionnaire UI, hidden until initial warning is dismissed */}
+            {currentAiMessage && !currentAiMessage.isFinalReport && !showInitialWarningPopup ? (
                 <div ref={containerRef} tabIndex={-1} role="region" aria-live="polite" aria-atomic="true" className="w-full max-w-2xl mx-auto border border-gray-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col animate-fade-in" style={{ backgroundColor: '#E8F5EF' }}>
                     {(currentStep > 0 && !isGameOver) && ( // Start conditional rendering for the entire progress bar container
                         <div className="flex items-center justify-between mb-8 px-4 py-3 bg-gray-50 rounded-xl">
@@ -641,13 +699,6 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
                             </button>
                         </div>
                     )} {/* End conditional rendering for the entire progress bar container */}
-
-                    {/* Medical Warning (persistent) */}
-                    {currentStep === 0 && medicalWarning && ( // Show only for the very first AI message
-                        <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-800 text-sm rounded-lg text-left animate-fade-in" role="note" aria-label="Avertissement médical">
-                            <p>{medicalWarning}</p>
-                        </div>
-                    )}
                     
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-900 text-sm rounded-lg text-center" role="alert">
@@ -791,6 +842,61 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
                                 Non, annuler
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Initial Warning Popup - Full Screen Overlay */}
+            {showInitialWarningPopup && (
+                <div 
+                    className="fixed inset-0 z-[1000] flex items-center justify-center p-4" 
+                    role="dialog" 
+                    aria-modal="true" 
+                    aria-labelledby="initial-warning-title"
+                >
+                    {/* Opaque Backdrop to hide header/footer completely */}
+                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm transition-opacity duration-300 animate-fade-in" aria-hidden="true"></div>
+
+                    {/* Popup Card */}
+                    <div 
+                        ref={initialWarningModalRef} 
+                        className="relative w-full max-w-lg bg-gradient-to-b from-[#D1FAE6] to-[#A8E6CF] rounded-[16px] shadow-2xl p-8 flex flex-col items-center text-center transform transition-all duration-500 ease-out animate-fade-in"
+                        style={{ 
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+                        }}
+                        tabIndex={-1}
+                    >
+                        {/* Icon */}
+                        <div className="mb-6 text-5xl animate-bounce">
+                            ⚠️
+                        </div>
+
+                        {/* Title */}
+                        <h2 id="initial-warning-title" className="text-2xl font-bold text-[#063E2E] mb-6 font-['Poppins'] tracking-tight">
+                            Avertissement médical
+                        </h2>
+
+                        {/* Text Content - Centered, readable, spaced */}
+                        <div className="space-y-6 text-[#063E2E] text-base md:text-lg font-medium leading-relaxed font-['Poppins']">
+                            <p>
+                                Les informations fournies par DermoCheck sont données à titre indicatif et ne remplacent pas une consultation médicale.
+                            </p>
+                            <p className="font-bold">
+                                Aucune donnée n’est sauvegardée.
+                            </p>
+                            <p>
+                                En cas de douleur, fièvre ou aggravation rapide d’une lésion, consultez immédiatement un dermatologue ou un service d’urgence.
+                            </p>
+                        </div>
+
+                        {/* Close Button */}
+                        <button 
+                            className="mt-8 bg-white text-[#063E2E] text-base font-bold py-3 px-12 rounded-[12px] shadow-md hover:shadow-lg hover:bg-gray-50 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#063E2E]/50" 
+                            onClick={() => setShowInitialWarningPopup(false)}
+                            aria-label="Fermer l'avertissement et commencer"
+                        >
+                            Fermer
+                        </button>
                     </div>
                 </div>
             )}

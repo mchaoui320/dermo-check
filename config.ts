@@ -6,7 +6,7 @@ export const appConfig: AppConfig = {
         name: "SkinCheck AI",
         description: "Dermatologue virtuel professionnel",
         theme: {
-            primaryColor: "#059669", // Emerald-600
+            primaryColor: "#059669", // Emerald-600 (Darker green for buttons)
             background: "#F9FAFB", // Gray-50
             card: "#FFFFFF",
             accent: "#D1FAE5", // Emerald-100
@@ -18,12 +18,12 @@ export const appConfig: AppConfig = {
                 logoText: "DERMO-CHECK",
                 subtitle: "Votre dermatologue virtuel de confiance",
                 nav: [
-                    { id: "questionnaire", label: "AUTO ANALYSE" },
-                    { id: "find-dermatologist", label: "TROUVER UN DERMATO" },
-                    { id: "dictionary", label: "DICTIONNAIRE" },
-                    { id: "blog", label: "REVUE" },
-                    { id: "about", label: "À PROPOS" },
-                    { id: "contact", label: "CONTACT" },
+                    { id: "questionnaire", label: "Auto analyse" },
+                    { id: "find-dermatologist", label: "Trouver un dermato" },
+                    { id: "dictionary", label: "Dictionnaire" },
+                    { id: "blog", label: "Revue" },
+                    { id: "about", label: "À propos" },
+                    { id: "contact", label: "Contact" },
                 ],
             },
             hero: {

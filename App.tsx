@@ -33,13 +33,13 @@ type PageId = string;
 type UserProfile = 'adult' | 'minor' | null;
 
 const NavItem: React.FC<{ label: string; active: boolean; onClick: () => void; mobile?: boolean }> = ({ label, active, onClick, mobile }) => {
-    // Desktop styles (White text on Dark Blue header)
+    // Desktop styles (Dark text on Light Green header)
     const desktopBase = "px-3 py-2 text-base font-medium transition-all duration-200 ease-in-out rounded-xl whitespace-nowrap border border-transparent";
-    const desktopActive = "bg-white/10 text-white font-bold shadow-sm border-white/20";
-    const desktopInactive = "text-gray-300 hover:text-white hover:bg-white/5";
+    const desktopActive = "bg-emerald-700 text-white font-bold shadow-sm border-emerald-800";
+    const desktopInactive = "text-emerald-900 hover:text-emerald-950 hover:bg-emerald-200/50";
 
     // Mobile styles (Drawer is white)
-    const mobileBase = "block w-full text-left px-4 py-3 text-lg font-medium border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors";
+    const mobileBase = "block w-full text-left px-4 py-3 text-lg font-medium border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors text-slate-700";
     const mobileActive = "text-emerald-800 bg-emerald-50 font-bold";
     const mobileInactive = "text-slate-700";
 
@@ -63,7 +63,6 @@ const App: React.FC = () => {
     const [userProfile, setUserProfile] = useState<UserProfile>(() => {
         return (localStorage.getItem('dermo_user_profile') as UserProfile) || null;
     });
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // States for "Trouver un Dermato" feature
@@ -71,12 +70,6 @@ const App: React.FC = () => {
     const [isDermSearchLoading, setIsDermSearchLoading] = useState(false);
     const [dermSearchError, setDermSearchError] = useState<string | null>(null);
     const [currentSearchQuery, setCurrentSearchQuery] = useState<{ country: string; city: string }>({ country: '', city: '' });
-
-    useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
     useEffect(() => {
         if (userProfile) {
@@ -140,35 +133,14 @@ const App: React.FC = () => {
         const allItems = appConfig.app.layout.header.nav;
         const isMinor = userProfile === 'minor';
         
-        // Screen breakpoints
-        const isMobile = windowWidth < 768;
-        const isTablet = windowWidth >= 768 && windowWidth < 1024;
-        const isDesktop = windowWidth >= 1024;
-
-        const allowedIds = new Set<string>();
-
-        // Always allowed
-        allowedIds.add('find-dermatologist'); // "Trouver un dermato"
-        allowedIds.add('dictionary');         // "Dictionnaire"
-
-        // "Auto analyse" (Questionnaire): Adult only
-        if (!isMinor) {
-            allowedIds.add('questionnaire');
-        }
-
-        // "Revue" (Blog): Tablet and Desktop only (for both profiles)
-        if (isTablet || isDesktop) {
-            allowedIds.add('blog');
-        }
-
-        // "À propos" & "Contact": Desktop only
-        if (isDesktop) {
-            allowedIds.add('about');
-            allowedIds.add('contact');
-        }
-
-        return allItems.filter(item => allowedIds.has(item.id));
-    }, [userProfile, windowWidth]);
+        return allItems.filter(item => {
+            // Rule: "Auto analyse" MUST NOT be visible for minors
+            if (isMinor && item.id === 'questionnaire') {
+                return false;
+            }
+            return true;
+        });
+    }, [userProfile]);
 
     const currentPageConfig = useMemo(() => appConfig.app.pages.find(p => p.id === currentPageId), [currentPageId]);
 
@@ -178,21 +150,10 @@ const App: React.FC = () => {
         }
 
         // STRICT Security check for Minors accessing Questionnaire
-        // Redirects immediately to finder if a minor tries to access questionnaire
         if (userProfile === 'minor' && currentPageId === 'questionnaire') {
-             // Using a timeout to avoid render-cycle state updates, or just render the restricted view
-             return (
-                <div className="w-full max-w-2xl mx-auto text-center p-8 bg-white rounded-3xl shadow-xl">
-                     <h2 className="text-2xl font-bold text-red-600 mb-4">Accès restreint</h2>
-                     <p className="mb-6 text-slate-700">L'auto-analyse n'est pas disponible pour les mineurs.</p>
-                     <button 
-                        onClick={() => navigateTo('find-dermatologist')}
-                        className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 transition-colors"
-                     >
-                        Trouver un dermatologue
-                     </button>
-                </div>
-             );
+             // Use setTimeout to avoid React render cycle issues when navigating during render
+             setTimeout(() => navigateTo('find-dermatologist'), 0);
+             return null; // Don't render anything while redirecting
         }
 
         switch (currentPageConfig.id) {
@@ -251,24 +212,27 @@ const App: React.FC = () => {
         <div 
             className="flex flex-col min-h-screen font-sans bg-gray-50" 
         >
-            {/* Header - Fixed, Dark Blue */}
+            {/* Header - Fixed/Sticky, Light Mint Green (#D1FAE6) */}
             <header 
-                className="sticky top-0 z-50 bg-[#0A2840] shadow-md p-3 md:p-4 border-b border-white/10"
+                className="sticky top-0 z-50 bg-[#D1FAE6] shadow-sm h-16 lg:h-20 border-b border-emerald-100"
             >
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    {/* Logo (Left) */}
-                    <div className="flex-shrink-0">
+                <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+                    {/* Logo Section (Left) */}
+                    <div className="flex-shrink-0 flex items-center gap-6"> {/* Increased gap to 6 */}
                         <button 
                             className="cursor-pointer flex items-center focus:outline-none"
                             onClick={() => navigateTo('home')}
                             aria-label="Accueil DERMO-CHECK"
                         >
-                            <DermoCheckLogo />
+                            {/* Logo Image */}
+                            <DermoCheckLogo size={48} className="rounded-lg mix-blend-multiply" /> {/* Increased base size to 48 */}
+                            {/* Text Brand */}
+                            <span className="text-emerald-950 font-bold text-xl tracking-wide ml-2">DermoCheck</span>
                         </button>
                     </div>
 
                     {/* Desktop Navigation (>= 1024px) */}
-                    <nav className="hidden lg:flex items-center space-x-2">
+                    <nav className="hidden lg:flex items-center space-x-1">
                         {getVisibleNavItems.map(navItem => (
                             <NavItem 
                                 key={navItem.id}
@@ -283,7 +247,7 @@ const App: React.FC = () => {
                     <div className="lg:hidden">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 text-white hover:text-emerald-400 transition-colors"
+                            className="p-2 text-emerald-900 hover:text-emerald-700 transition-colors"
                             aria-label="Ouvrir le menu"
                         >
                             <MenuIcon />
@@ -293,88 +257,91 @@ const App: React.FC = () => {
             </header>
 
             {/* Mobile/Tablet Side Drawer */}
-            {isMobileMenuOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div 
-                        className="fixed inset-0 bg-black/60 z-50 lg:hidden animate-fade-in"
+            {/* Backdrop */}
+            <div 
+                className={`fixed inset-0 bg-black/60 z-40 lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-hidden="true"
+            />
+            
+            {/* Drawer Panel */}
+            <div 
+                className={`fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-out lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu de navigation"
+            >
+                {/* Drawer Header - Light Mint Green */}
+                <div className="h-16 flex items-center justify-between px-4 border-b border-emerald-100 bg-[#D1FAE6]">
+                    <span className="text-xl font-bold text-emerald-900">Menu</span>
+                    <button
                         onClick={() => setIsMobileMenuOpen(false)}
-                        aria-hidden="true"
-                    />
-                    
-                    {/* Drawer Panel */}
-                    <div 
-                        className="fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-out lg:hidden flex flex-col"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Menu de navigation"
+                        className="p-2 text-emerald-900 hover:text-emerald-700 transition-colors"
+                        aria-label="Fermer le menu"
                     >
-                        {/* Drawer Header */}
-                        <div className="p-4 flex items-center justify-between border-b border-gray-100 bg-[#0A2840]">
-                            <span className="text-xl font-bold text-white">Menu</span>
-                            <button
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className="p-2 text-white hover:text-emerald-400 transition-colors"
-                                aria-label="Fermer le menu"
-                            >
-                                <XIcon />
-                            </button>
-                        </div>
+                        <XIcon />
+                    </button>
+                </div>
 
-                        {/* Drawer Links */}
-                        <nav className="flex-grow p-4 overflow-y-auto">
-                            <div className="flex flex-col space-y-1">
-                                {getVisibleNavItems.map(navItem => (
-                                    <NavItem 
-                                        key={navItem.id}
-                                        label={navItem.label} 
-                                        active={currentPageId === navItem.id} 
-                                        onClick={() => navigateTo(navItem.id)} 
-                                        mobile={true}
-                                    />
-                                ))}
-                            </div>
-                        </nav>
-                        
-                        {/* Drawer Footer (Profile Management) */}
-                         <div className="p-6 border-t border-gray-100 bg-gray-50">
-                             <div className="flex items-center justify-center gap-2 mb-4">
-                                <span className="text-sm text-slate-500">Profil : </span>
-                                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase">
-                                    {userProfile === 'adult' ? 'Majeur' : 'Mineur'}
-                                </span>
-                             </div>
-                            <button 
-                                onClick={() => {
-                                    localStorage.removeItem('dermo_user_profile');
-                                    setUserProfile(null);
-                                    setIsMobileMenuOpen(false);
-                                    navigateTo('home');
-                                }}
-                                className="w-full py-2 px-4 border border-slate-300 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                            >
-                                Changer de profil
-                            </button>
-                        </div>
+                {/* Drawer Links */}
+                <nav className="flex-grow py-2 overflow-y-auto">
+                    <div className="flex flex-col">
+                        {getVisibleNavItems.map(navItem => (
+                            <NavItem 
+                                key={navItem.id}
+                                label={navItem.label} 
+                                active={currentPageId === navItem.id} 
+                                onClick={() => navigateTo(navItem.id)} 
+                                mobile={true}
+                            />
+                        ))}
                     </div>
-                </>
-            )}
+                </nav>
+                
+                {/* Drawer Footer (Profile Management) */}
+                 <div className="p-6 border-t border-gray-100 bg-gray-50">
+                     <div className="flex items-center justify-center gap-2 mb-4">
+                        <span className="text-sm text-slate-500">Profil : </span>
+                        <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase">
+                            {userProfile === 'adult' ? 'Majeur' : 'Mineur'}
+                        </span>
+                     </div>
+                    <button 
+                        onClick={() => {
+                            localStorage.removeItem('dermo_user_profile');
+                            setUserProfile(null);
+                            setIsMobileMenuOpen(false);
+                            navigateTo('home');
+                        }}
+                        className="w-full py-2 px-4 border border-slate-300 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                    >
+                        Changer de profil
+                    </button>
+                </div>
+            </div>
 
             {/* Main Content */}
             <main className="flex-grow overflow-y-auto p-4 md:p-6 lg:p-8" id="main-content">
-                <div key={currentPageId} className="w-full animate-fade-in flex flex-col items-center">
+                {/* 
+                    REMOVED: 'animate-fade-in' class from this wrapper div.
+                    REASON: The transformation creates a stacking context that breaks 'fixed' positioning
+                    for the Health Warning Popup in Questionnaire.tsx, causing it to be contained within 
+                    this div instead of covering the full viewport.
+                    Each page component (HomePage, Questionnaire, etc.) handles its own animation.
+                */}
+                <div key={currentPageId} className="w-full flex flex-col items-center">
                     {renderMainContent()}
                 </div>
             </main>
 
-            {/* Footer - Updated Design */}
-            <footer className="bg-[#0A2840] text-white py-8 px-6 mt-auto">
+            {/* Footer - Light Mint Green (#D1FAE6) */}
+            <footer className="bg-[#D1FAE6] text-emerald-900 py-8 px-6 mt-auto border-t border-emerald-100">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 text-center lg:text-left">
                     
                     {/* Column 1: Branding */}
                     <div className="flex flex-col items-center lg:items-start gap-4">
-                        <h3 className="text-2xl font-bold tracking-wider">DermoCheck</h3>
-                        <p className="text-sm text-gray-400 max-w-xs leading-relaxed">
+                        <h3 className="text-2xl font-bold tracking-wider text-emerald-950">DermoCheck</h3>
+                        <p className="text-sm text-emerald-800 max-w-xs leading-relaxed">
                             DermoCheck ne remplace pas une consultation dermatologique.
                             En cas de doute ou d'urgence, consultez impérativement un médecin.
                         </p>
@@ -382,19 +349,19 @@ const App: React.FC = () => {
 
                     {/* Column 2: Legal Links */}
                     <div className="flex flex-col items-center lg:items-start gap-3">
-                         <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">Légal</h4>
-                         <button onClick={() => navigateTo('terms-of-use')} className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Mentions légales</button>
-                         <button onClick={() => navigateTo('terms-of-use')} className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">CGU</button>
-                         <button onClick={() => navigateTo('privacy-policy')} className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">Confidentialité</button>
+                         <h4 className="text-sm font-bold text-emerald-700 uppercase tracking-wider mb-2">Légal</h4>
+                         <button onClick={() => navigateTo('terms-of-use')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">Mentions légales</button>
+                         <button onClick={() => navigateTo('terms-of-use')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">CGU</button>
+                         <button onClick={() => navigateTo('privacy-policy')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">Confidentialité</button>
                     </div>
 
                     {/* Column 3: Copyright/Info */}
                     <div className="flex flex-col items-center lg:items-end justify-end gap-2">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-emerald-800/80">
                             © {new Date().getFullYear()} DERMO-CHECK. Tous droits réservés.
                         </p>
-                        <div className="text-xs text-gray-600">
-                            v1.2.0 - Assistant Dermatologique
+                        <div className="text-xs text-emerald-800/80">
+                            v1.3.0 - Assistant Dermatologique
                         </div>
                     </div>
                 </div>

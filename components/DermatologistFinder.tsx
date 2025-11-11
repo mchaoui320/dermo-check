@@ -32,7 +32,8 @@ const DermatologistFinder: React.FC<DermatologistFinderProps> = ({ onBack, onSea
                     setGeolocationStatus('success');
                 },
                 (error) => {
-                    console.error("Geolocation error:", error.message || error); // Log error.message for better readability
+                    // Use console.warn instead of error for expected permission denials
+                    console.warn("Geolocation status:", error.message || "Unknown error"); 
                     if (error.code === error.PERMISSION_DENIED) {
                         setGeolocationStatus('denied');
                     } else {
@@ -72,8 +73,8 @@ const DermatologistFinder: React.FC<DermatologistFinderProps> = ({ onBack, onSea
             <div className="w-full text-sm md:text-base text-center mb-4" aria-live="polite" aria-atomic="true">
                 {geolocationStatus === 'loading' && <p className="text-slate-600">Chargement de votre position...</p>}
                 {geolocationStatus === 'success' && <p className="text-emerald-700">Votre position a été détectée pour une meilleure précision.</p>}
-                {geolocationStatus === 'denied' && <p className="text-orange-600">Accès à la position refusé. Les résultats peuvent être moins pertinents. Veuillez vérifier les paramètres de localisation de votre navigateur.</p>}
-                {geolocationStatus === 'error' && <p className="text-red-600">Erreur de géolocalisation. Les résultats peuvent être moins pertinents.</p>}
+                {geolocationStatus === 'denied' && <p className="text-slate-500 italic">Localisation non disponible. Veuillez saisir votre ville manuellement.</p>}
+                {geolocationStatus === 'error' && <p className="text-slate-500 italic">Impossible de détecter la position. Veuillez saisir votre ville manuellement.</p>}
             </div>
 
             <select

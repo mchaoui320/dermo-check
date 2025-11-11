@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { appConfig } from '../config'; // Import appConfig to access theme
 
@@ -41,16 +40,16 @@ export const RedoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 export const DermoCheckLogo: React.FC<{ size?: number; className?: string }> = ({ size, className }) => {
-  // Responsive behavior rules:
-  // Mobile (< 768 px): max 120px
-  // Tablet (768-1024 px): max 160px
-  // Desktop (> 1024 px): max 200-220px
+  // Responsive behavior rules (Increased by ~20%):
+  // Mobile (< 768 px): max 144px (was 120px)
+  // Tablet (768-1024 px): max 192px (was 160px)
+  // Desktop (> 1024 px): max 264px (was 220px)
   // These classes apply when no specific size is passed (e.g. in Header)
-  const responsiveClasses = !size ? "max-w-[120px] md:max-w-[160px] lg:max-w-[220px]" : "";
+  const responsiveClasses = !size ? "max-w-[144px] md:max-w-[192px] lg:max-w-[264px]" : "";
 
   return (
     <img
-      src="/logoderma.jpeg"
+      src="https://protect-nuisible.com/wp-content/uploads/2025/11/logoderma.jpeg"
       alt="DermoCheck"
       className={`h-auto object-contain cursor-pointer ${responsiveClasses} ${className || ''}`}
       style={size ? { width: `${size}px`, maxWidth: '100%' } : undefined}
