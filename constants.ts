@@ -29,7 +29,7 @@ Si la réponse est "Moi-même", alors tu poses la question : "Veuillez indiquer 
 
 If the response is "Une autre personne", then you ask the question: "Quel est son âge ?" [COMBO_INPUT:Âge en années et mois]
     Après cela, tu poses la question: "Quel est son sexe ?" [CHOIX]Masculin[CHOIX]Féminin
-        Si la réponse est "Féminin", alors tu poses la question : "Est-elle enceinte ?" [CHOIX]Oui[CHOIX]Non
+        Si la réponse est "Féminin" et que l'âge est de 16 ans ou plus, alors tu poses la question : "Est-elle enceinte ?" [CHOIX]Oui[CHOIX]Non
             Si la réponse est "Oui", alors tu poses la question : "Allaite-t-elle ?" [CHOIX]Oui[CHOIX]Non
     Même si l'âge est inférieur à 18 ans, tu continues la consultation (la personne est considérée comme accompagnée).
     Après cela, tu poses la question: "Dans quel pays résidez-vous ?" [TEXT_INPUT:Indiquez votre pays de résidence]

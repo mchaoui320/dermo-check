@@ -708,27 +708,43 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ config }) => {
                         </div>
                     )}
 
-                    <div key={currentAiMessage.id} className="text-center mb-8 animate-fade-in">
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                    {currentAiMessage.text.includes("Cette auto-analyse concerne :") ? (
+                        <div className="text-center mb-8 animate-fade-in">
+                            <h1 className="text-2xl md:text-3xl font-semibold leading-tight mb-4 font-['Poppins'] text-[#0A2840]">
+                                DermoCheck – analyse rapide de votre peau en ligne
+                            </h1>
+                            <p className="text-base md:text-lg font-normal leading-relaxed mb-6 font-['Inter'] text-[#195E49]">
+                                Répondez à quelques <strong>questions simples et visuelles</strong> pour mieux comprendre l’état de votre peau.
+                                <br className="hidden md:block" />
+                                DermoCheck vous guide pas à pas et vous aide à repérer les <strong>signes qui nécessitent l’avis d’un dermatologue</strong>.
+                            </p>
+                            <p className="text-base md:text-lg font-medium font-['Inter'] text-[#0A2840]">
+                                Choisissez pour qui vous souhaitez lancer l’analyse :
+                            </p>
+                        </div>
+                    ) : (
+                        <div key={currentAiMessage.id} className="text-center mb-8 animate-fade-in">
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                                {(() => {
+                                    const text = currentAiMessage.text;
+                                    const qIndex = text.indexOf('?');
+                                    if (qIndex !== -1) return text.substring(0, qIndex + 1);
+                                    return text;
+                                })()}
+                            </h2>
                             {(() => {
                                 const text = currentAiMessage.text;
                                 const qIndex = text.indexOf('?');
-                                if (qIndex !== -1) return text.substring(0, qIndex + 1);
-                                return text;
-                            })()}
-                        </h2>
-                        {(() => {
-                            const text = currentAiMessage.text;
-                            const qIndex = text.indexOf('?');
-                            if (qIndex !== -1) {
-                                const remainder = text.substring(qIndex + 1).trim();
-                                if (remainder && !remainder.startsWith('[CHOIX]') && !remainder.startsWith('[MULTI_CHOIX]') && !remainder.startsWith('[COMBO_INPUT]') && !remainder.startsWith('[AGE_DROPDOWN]')) { // New: exclude AGE_DROPDOWN
-                                    return <p className="text-base text-slate-600 mt-3 leading-snug">{remainder}</p>;
+                                if (qIndex !== -1) {
+                                    const remainder = text.substring(qIndex + 1).trim();
+                                    if (remainder && !remainder.startsWith('[CHOIX]') && !remainder.startsWith('[MULTI_CHOIX]') && !remainder.startsWith('[COMBO_INPUT]') && !remainder.startsWith('[AGE_DROPDOWN]')) { 
+                                        return <p className="text-base text-slate-600 mt-3 leading-snug">{remainder}</p>;
+                                    }
                                 }
-                            }
-                            return null;
-                        })()}
-                    </div>
+                                return null;
+                            })()}
+                        </div>
+                    )}
 
                     {isLoading && !awaitingNumberInputForOption ? ( // Removed awaitingVideoQuestion
                         <div className="flex flex-col items-center justify-center h-48" aria-live="polite" aria-atomic="true" role="status">

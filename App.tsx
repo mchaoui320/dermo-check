@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import HomePage from './components/HomePage';
 import AboutPage from './components/AboutPage';
@@ -70,6 +69,7 @@ const App: React.FC = () => {
     const [isDermSearchLoading, setIsDermSearchLoading] = useState(false);
     const [dermSearchError, setDermSearchError] = useState<string | null>(null);
     const [currentSearchQuery, setCurrentSearchQuery] = useState<{ country: string; city: string }>({ country: '', city: '' });
+    const [lastSearchLocation, setLastSearchLocation] = useState<LatLng | null>(null);
 
     useEffect(() => {
         if (userProfile) {
@@ -86,6 +86,7 @@ const App: React.FC = () => {
             setIsDermSearchLoading(false);
             setDermSearchError(null);
             setCurrentSearchQuery({ country: '', city: '' });
+            setLastSearchLocation(null);
         }
     }, []);
 
@@ -106,6 +107,8 @@ const App: React.FC = () => {
         setDermSearchError(null);
         setDermatologistMapResults(null);
         setCurrentSearchQuery({ country, city });
+        setLastSearchLocation(userLatLng || null); // Store the location used for this search
+
         try {
             const results = await searchDermatologistsWithMaps(country, city, userLatLng);
             setDermatologistMapResults(results);
@@ -121,12 +124,14 @@ const App: React.FC = () => {
         setDermatologistMapResults(null);
         setDermSearchError(null);
         setCurrentSearchQuery({ country: '', city: '' }); // Clear search query to show finder
+        setLastSearchLocation(null);
     }, []);
 
     const handleBackFromFinder = useCallback(() => {
         setDermatologistMapResults(null);
         setDermSearchError(null);
         setCurrentSearchQuery({ country: currentSearchQuery.country, city: '' }); // Keep country, clear city to re-show finder
+        setLastSearchLocation(null);
     }, [currentSearchQuery.country]);
 
     const getVisibleNavItems = useMemo(() => {
@@ -174,7 +179,7 @@ const App: React.FC = () => {
                 return <ContactPage config={currentPageConfig} />;
             case 'find-dermatologist':
                 return (
-                    <div className="w-full max-w-3xl mx-auto bg-white border border-gray-200 rounded-3xl p-6 md:p-8 text-center animate-fade-in shadow-xl relative">
+                    <div className="w-full max-w-6xl mx-auto bg-white border border-gray-200 rounded-3xl p-6 md:p-8 text-center animate-fade-in shadow-xl relative">
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">{currentPageConfig.title}</h2>
                         {currentPageConfig.description && <p className="text-base md:text-lg text-slate-600 mb-8">{currentPageConfig.description}</p>}
 
@@ -185,6 +190,8 @@ const App: React.FC = () => {
                                 searchQuery={currentSearchQuery}
                                 isLoading={isDermSearchLoading}
                                 error={dermSearchError}
+                                onSearch={performDermatologistSearch}
+                                lastSearchLocation={lastSearchLocation}
                             />
                         ) : (
                             <DermatologistFinder

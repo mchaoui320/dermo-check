@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Tool, ToolConfig, RetrievalConfig, LatLng, GenerateContentResponse } from "@google/genai";
 import { getSystemInstruction } from '../constants'; // Import the function
 import { GeminiContent, GeminiImagePart, GeminiTextPart } from '../types'; // Removed GeminiVideoPart
@@ -148,8 +147,8 @@ export const analyzeVideo = async (videoFile: File, question: string): Promise<s
 
 /**
  * Searches for dermatologists using Google Maps grounding.
- * @param country The country to search in.
- * @param city The city to search in.
+ * @param country The country to search in (optional if using userLatLng).
+ * @param city The city to search in (optional if using userLatLng).
  * @param userLatLng Optional user's current latitude and longitude for more localized results.
  * @returns The GenerateContentResponse from the Gemini API, containing groundingMetadata.
  */
@@ -169,7 +168,16 @@ export const searchDermatologistsWithMaps = async (
         };
     }
 
-    const prompt = `Trouvez des dermatologues à ${city}, ${country}.`;
+    // Dynamic prompt generation based on whether city/country are provided or if it's a geolocation search
+    let prompt = "";
+    if (city && country) {
+        prompt = `Trouvez des dermatologues à ${city}, ${country}.`;
+    } else if (userLatLng) {
+        prompt = `Trouvez les dermatologues les plus proches de ma position actuelle (rayon 10-15km).`;
+    } else {
+         // Fallback if neither location info is present properly
+         prompt = "Trouvez des dermatologues.";
+    }
 
     try {
         const response = await aiClient.models.generateContent({
