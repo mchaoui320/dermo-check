@@ -1,20 +1,26 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Dermo-Check
 
-# Run and deploy your AI Studio app
+Application d'aide au pré-diagnostic dermatologique alimentée par l'IA.
 
-This contains everything you need to run your app locally.
+## Fonctionnalités
 
-View your app in AI Studio: https://ai.studio/apps/drive/1bgLmPGjl9FSDlCQitgXqQmeAOuPeRGPY
+- **Auto-analyse** : Questionnaire intelligent et analyse d'image par IA.
+- **Trouver un dermatologue** : Recherche locale ou par ville dans +200 pays.
+  - Distances calculées en temps réel.
+  - Infos complètes (Tél, Email, Site).
+- **Dictionnaire** : Lexique des termes médicaux.
+- **Support Multi-profils** : Mode Majeur et Mineur adapté.
 
-## Run Locally
+## Développement
 
-**Prerequisites:**  Node.js
+Le projet utilise Vite + React + TypeScript.
 
+```bash
+npm install
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Déploiement
+
+Le déploiement est automatisé via GitHub Actions sur Firebase Hosting.
+Toute modification sur la branche `main` est déployée automatiquement.
