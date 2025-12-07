@@ -1,0 +1,8 @@
+{
+  "name": "Copy of DERMO-CHECK",
+  "description": "Un assistant de pré-triage dermatologique propulsé par l'IA qui pose des questions structurées sur les lésions cutanées, analyse les photos fournies par l'utilisateur, et propose des hypothèses potentielles ainsi que des conseils, tout en recommandant fortement la consultation d'un dermatologue.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
