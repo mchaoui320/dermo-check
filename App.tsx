@@ -17,15 +17,15 @@ import { GenerateContentResponse, LatLng } from '@google/genai';
 
 // --- Icons for Menu ---
 const MenuIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
 );
 
 const XIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
 );
 
 type PageId = string;
@@ -137,7 +137,7 @@ const App: React.FC = () => {
     const getVisibleNavItems = useMemo(() => {
         const allItems = appConfig.app.layout.header.nav;
         const isMinor = userProfile === 'minor';
-        
+
         return allItems.filter(item => {
             // Rule: "Auto analyse" MUST NOT be visible for minors
             if (isMinor && item.id === 'questionnaire') {
@@ -156,16 +156,16 @@ const App: React.FC = () => {
 
         // STRICT Security check for Minors accessing Questionnaire
         if (userProfile === 'minor' && currentPageId === 'questionnaire') {
-             // Use setTimeout to avoid React render cycle issues when navigating during render
-             setTimeout(() => navigateTo('find-dermatologist'), 0);
-             return null; // Don't render anything while redirecting
+            // Use setTimeout to avoid React render cycle issues when navigating during render
+            setTimeout(() => navigateTo('find-dermatologist'), 0);
+            return null; // Don't render anything while redirecting
         }
 
         switch (currentPageConfig.id) {
             case 'home':
-                return <HomePage 
-                    config={currentPageConfig} 
-                    onStart={() => navigateTo(userProfile === 'minor' ? 'find-dermatologist' : 'questionnaire')} 
+                return <HomePage
+                    config={currentPageConfig}
+                    onStart={() => navigateTo(userProfile === 'minor' ? 'find-dermatologist' : 'questionnaire')}
                 />;
             case 'questionnaire':
                 return <Questionnaire config={currentPageConfig} />;
@@ -216,17 +216,17 @@ const App: React.FC = () => {
     }
 
     return (
-        <div 
-            className="flex flex-col min-h-screen font-sans bg-gray-50" 
+        <div
+            className="flex flex-col min-h-screen font-sans bg-gray-50"
         >
             {/* Header - Fixed/Sticky, Light Mint Green (#D1FAE6) */}
-            <header 
+            <header
                 className="sticky top-0 z-50 bg-[#D1FAE6] shadow-sm h-16 lg:h-20 border-b border-emerald-100"
             >
                 <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
                     {/* Logo Section (Left) */}
                     <div className="flex-shrink-0 flex items-center gap-6"> {/* Increased gap to 6 */}
-                        <button 
+                        <button
                             className="cursor-pointer flex items-center focus:outline-none"
                             onClick={() => navigateTo('home')}
                             aria-label="Accueil DERMO-CHECK"
@@ -241,13 +241,35 @@ const App: React.FC = () => {
                     {/* Desktop Navigation (>= 1024px) */}
                     <nav className="hidden lg:flex items-center space-x-1">
                         {getVisibleNavItems.map(navItem => (
-                            <NavItem 
+                            <NavItem
                                 key={navItem.id}
-                                label={navItem.label} 
-                                active={currentPageId === navItem.id} 
-                                onClick={() => navigateTo(navItem.id)} 
+                                label={navItem.label}
+                                active={currentPageId === navItem.id}
+                                onClick={() => navigateTo(navItem.id)}
                             />
                         ))}
+                        {/* Desktop Profile Switcher */}
+                        <div className="ml-4 pl-4 border-l border-emerald-200 flex items-center gap-2">
+                            <div className="flex flex-col items-end mr-1">
+                                <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Profil</span>
+                                <span className="text-sm font-bold text-emerald-900 leading-none">
+                                    {userProfile === 'adult' ? 'Majeur' : 'Mineur'}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem('dermo_user_profile');
+                                    setUserProfile(null);
+                                    navigateTo('home');
+                                }}
+                                className="p-1.5 rounded-full bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 transition-all shadow-sm"
+                                title="Changer de profil"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                            </button>
+                        </div>
                     </nav>
 
                     {/* Mobile/Tablet Hamburger Button (< 1024px) */}
@@ -265,14 +287,14 @@ const App: React.FC = () => {
 
             {/* Mobile/Tablet Side Drawer */}
             {/* Backdrop */}
-            <div 
+            <div
                 className={`fixed inset-0 bg-black/60 z-40 lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-hidden="true"
             />
-            
+
             {/* Drawer Panel */}
-            <div 
+            <div
                 className={`fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-out lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 role="dialog"
                 aria-modal="true"
@@ -294,26 +316,26 @@ const App: React.FC = () => {
                 <nav className="flex-grow py-2 overflow-y-auto">
                     <div className="flex flex-col">
                         {getVisibleNavItems.map(navItem => (
-                            <NavItem 
+                            <NavItem
                                 key={navItem.id}
-                                label={navItem.label} 
-                                active={currentPageId === navItem.id} 
-                                onClick={() => navigateTo(navItem.id)} 
+                                label={navItem.label}
+                                active={currentPageId === navItem.id}
+                                onClick={() => navigateTo(navItem.id)}
                                 mobile={true}
                             />
                         ))}
                     </div>
                 </nav>
-                
+
                 {/* Drawer Footer (Profile Management) */}
-                 <div className="p-6 border-t border-gray-100 bg-gray-50">
-                     <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="p-6 border-t border-gray-100 bg-gray-50">
+                    <div className="flex items-center justify-center gap-2 mb-4">
                         <span className="text-sm text-slate-500">Profil : </span>
                         <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase">
                             {userProfile === 'adult' ? 'Majeur' : 'Mineur'}
                         </span>
-                     </div>
-                    <button 
+                    </div>
+                    <button
                         onClick={() => {
                             localStorage.removeItem('dermo_user_profile');
                             setUserProfile(null);
@@ -344,7 +366,7 @@ const App: React.FC = () => {
             {/* Footer - Light Mint Green (#D1FAE6) */}
             <footer className="bg-[#D1FAE6] text-emerald-900 py-8 px-6 mt-auto border-t border-emerald-100">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 text-center lg:text-left">
-                    
+
                     {/* Column 1: Branding */}
                     <div className="flex flex-col items-center lg:items-start gap-4">
                         <h3 className="text-2xl font-bold tracking-wider text-emerald-950">DermoCheck</h3>
@@ -356,10 +378,10 @@ const App: React.FC = () => {
 
                     {/* Column 2: Legal Links */}
                     <div className="flex flex-col items-center lg:items-start gap-3">
-                         <h4 className="text-sm font-bold text-emerald-700 uppercase tracking-wider mb-2">Légal</h4>
-                         <button onClick={() => navigateTo('terms-of-use')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">Mentions légales</button>
-                         <button onClick={() => navigateTo('terms-of-use')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">CGU</button>
-                         <button onClick={() => navigateTo('privacy-policy')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">Confidentialité</button>
+                        <h4 className="text-sm font-bold text-emerald-700 uppercase tracking-wider mb-2">Légal</h4>
+                        <button onClick={() => navigateTo('terms-of-use')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">Mentions légales</button>
+                        <button onClick={() => navigateTo('terms-of-use')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">CGU</button>
+                        <button onClick={() => navigateTo('privacy-policy')} className="text-emerald-800 hover:text-emerald-950 transition-colors text-sm">Confidentialité</button>
                     </div>
 
                     {/* Column 3: Copyright/Info */}

@@ -268,11 +268,11 @@ const CITY_DATA: Record<string, string[]> = {
 const DEFAULT_CITIES = ["Capitale / Ville principale", "Autre (saisir)"];
 
 
-const DermatologistListPage: React.FC<DermatologistListPageProps> = ({ 
-    dermatologistMapResults, 
-    onBack, 
-    searchQuery, 
-    isLoading, 
+const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
+    dermatologistMapResults,
+    onBack,
+    searchQuery,
+    isLoading,
     error,
     onSearch,
     lastSearchLocation
@@ -286,6 +286,7 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
     const availableCities = useMemo(() => {
         if (!selectedCountry) return [];
         const cities = CITY_DATA[selectedCountry];
+        // Ensure that even if the country exists but has an empty array, we don't break, though ideally we populate CITY_DATA
         return cities && cities.length > 0 ? cities : DEFAULT_CITIES;
     }, [selectedCountry]);
 
@@ -296,8 +297,8 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
     };
 
     const handleManualSearch = async () => {
-        const finalCity = (selectedCityOption === 'other' || selectedCityOption === 'Autre (saisir)' || selectedCityOption === 'Capitale / Ville principale') 
-            ? customCityInput.trim() 
+        const finalCity = (selectedCityOption === 'other' || selectedCityOption === 'Autre (saisir)' || selectedCityOption === 'Capitale / Ville principale')
+            ? customCityInput.trim()
             : selectedCityOption;
 
         if (selectedCountry && finalCity) {
@@ -322,13 +323,13 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
                 await onSearch("", "", latLng);
             },
             (err) => {
-                 console.warn("Geolocation error:", err);
-                 setGeoError("Impossible de récupérer votre position.");
+                console.warn("Geolocation error:", err);
+                setGeoError("Impossible de récupérer votre position.");
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     };
-    
+
     const isManualSearchDisabled = useMemo(() => {
         if (isLoading || !selectedCountry) return true;
         if ((selectedCityOption === 'other' || selectedCityOption === 'Autre (saisir)') && !customCityInput.trim()) return true;
@@ -349,16 +350,16 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
             if (chunk.maps) {
                 const mapInfo = chunk.maps as unknown as MapsPlaceInfo;
                 const anyMapInfo = mapInfo as any; // For accessing potential non-typed properties
-                
+
                 if (mapInfo.uri && mapInfo.title) {
                     const name = mapInfo.title.trim();
-                    
+
                     // Robust extraction with fallback to snake_case
                     const address = (mapInfo.formattedAddress || mapInfo.formatted_address || anyMapInfo.vicinity || anyMapInfo.address)?.trim();
                     const phone = (mapInfo.formattedPhoneNumber || mapInfo.formatted_phone_number || mapInfo.internationalPhoneNumber || mapInfo.international_phone_number || anyMapInfo.phone_number)?.trim();
                     const website = (mapInfo.websiteUri || mapInfo.website_uri || mapInfo.website || anyMapInfo.url)?.trim();
                     const email = (anyMapInfo.email || anyMapInfo.business_email || anyMapInfo.contact_email)?.trim();
-                    
+
                     // Coordinate extraction logic
                     let lat: number | undefined;
                     let lng: number | undefined;
@@ -367,11 +368,11 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
                         lat = anyMapInfo.geometry.location.lat;
                         lng = anyMapInfo.geometry.location.lng;
                     } else if (anyMapInfo.latitude && anyMapInfo.longitude) {
-                         lat = anyMapInfo.latitude;
-                         lng = anyMapInfo.longitude;
+                        lat = anyMapInfo.latitude;
+                        lng = anyMapInfo.longitude;
                     } else if (anyMapInfo.center) {
-                         lat = anyMapInfo.center.latitude;
-                         lng = anyMapInfo.center.longitude;
+                        lat = anyMapInfo.center.latitude;
+                        lng = anyMapInfo.center.longitude;
                     }
 
                     let distance: number | undefined = undefined;
@@ -449,11 +450,11 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
             return (
                 <div className="w-full space-y-5 text-left mt-6" role="region" aria-label="Liste des dermatologues">
                     <div className="flex items-center justify-between mb-2">
-                         <h3 className="text-xl md:text-2xl font-bold text-slate-900">
+                        <h3 className="text-xl md:text-2xl font-bold text-slate-900">
                             {lastSearchLocation ? `Résultats autour de moi (${displayableDermatologists.length})` : `Dermatologues à ${searchQuery.city || 'proximité'} (${displayableDermatologists.length})`}
                         </h3>
                     </div>
-                   
+
                     {displayableDermatologists.map((derm, index) => (
                         <div key={index} className="bg-white p-6 rounded-[16px] shadow-md border border-gray-100 transition-shadow hover:shadow-lg flex flex-col gap-3 animate-fade-in">
                             {/* Header: Name */}
@@ -462,43 +463,44 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
                                     {derm.name}
                                 </h4>
                             </div>
-                            
+
                             {/* Content Block */}
                             <div className="font-['Inter'] text-sm md:text-base space-y-2 text-[#0A2840]">
-                                
-                                {/* Address and Distance */}
-                                {(derm.address || derm.distance !== undefined) && (
-                                    <div className="flex flex-col gap-1">
-                                         {derm.address && (
-                                            <p className="leading-relaxed flex gap-2 items-start">
-                                                <span className="font-medium min-w-[24px] text-slate-500">📍</span>
-                                                <span>{derm.address}</span>
-                                            </p>
-                                         )}
-                                         {derm.distance !== undefined && (
-                                            <p className="text-sm font-bold text-emerald-700 ml-8">
-                                                📍 à {derm.distance} km
-                                            </p>
-                                         )}
-                                    </div>
+
+                                {/* Address */}
+                                {derm.address && (
+                                    <p className="leading-relaxed flex gap-2 items-start">
+                                        <span className="font-medium min-w-[24px] text-slate-500">📍</span>
+                                        <span>{derm.address}</span>
+                                    </p>
                                 )}
-                                
+
+                                {/* Distance */}
+                                {derm.distance !== undefined && (
+                                    <p className="leading-relaxed flex gap-2 items-center text-emerald-700 font-medium">
+                                        <span className="font-medium min-w-[24px]">📍</span>
+                                        <span>à {derm.distance} km</span>
+                                    </p>
+                                )}
+
+                                {/* Phone */}
                                 {derm.phone && (
                                     <p className="leading-relaxed flex gap-2 items-center">
-                                        <span className="font-medium min-w-[24px] text-slate-500">📞</span> 
+                                        <span className="font-medium min-w-[24px] text-slate-500">📞</span>
                                         <a href={`tel:${derm.phone.replace(/[^\d+]/g, '')}`} className="hover:text-[#00B37E] font-medium transition-colors">
                                             {derm.phone}
                                         </a>
                                     </p>
                                 )}
-                                
+
+                                {/* Website */}
                                 {derm.website && (
                                     <p className="leading-relaxed flex gap-2 items-center">
-                                         <span className="font-medium min-w-[24px] text-slate-500">🌐</span>
-                                         <a 
-                                            href={derm.website} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
+                                        <span className="font-medium min-w-[24px] text-slate-500">🌐</span>
+                                        <a
+                                            href={derm.website}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                             className="text-[#0066CC] hover:underline truncate block max-w-full"
                                         >
                                             {derm.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}
@@ -506,9 +508,10 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
                                     </p>
                                 )}
 
+                                {/* Email */}
                                 {derm.email && (
                                     <p className="leading-relaxed flex gap-2 items-center">
-                                        <span className="font-medium min-w-[24px] text-slate-500">✉️</span> 
+                                        <span className="font-medium min-w-[24px] text-slate-500">✉️</span>
                                         <a href={`mailto:${derm.email}`} className="text-[#0066CC] hover:underline break-all">
                                             {derm.email}
                                         </a>
@@ -518,10 +521,10 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
 
                             {/* Footer: Link */}
                             <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-end">
-                                <a 
-                                    href={derm.uri} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
+                                <a
+                                    href={derm.uri}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 bg-gray-100 text-slate-700 hover:bg-[#00B37E] hover:text-white px-4 py-2 rounded-full font-['Inter'] font-medium text-sm transition-colors duration-200"
                                 >
                                     Voir sur Google Maps
@@ -550,9 +553,9 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
 
     return (
         <div className="flex flex-col gap-6 w-full animate-fade-in relative pt-4">
-             {/* The Search Header Block (Dual Mode) */}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-4 border-b border-gray-100 pb-8">
-                
+            {/* The Search Header Block (Dual Mode) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-4 border-b border-gray-100 pb-8">
+
                 {/* BLOC 1 : Autour de moi (Compact) */}
                 <div className="bg-[#F0FDFA] border border-[#D1FAE6] rounded-2xl p-5 flex flex-col shadow-sm">
                     <h3 className="text-lg font-bold font-['Poppins'] text-[#0A2840] mb-2 flex items-center gap-2">
@@ -574,7 +577,7 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
                 {/* BLOC 2 : Manuel (Compact) */}
                 <div className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col shadow-sm">
                     <h3 className="text-lg font-bold font-['Poppins'] text-[#0A2840] mb-2 flex items-center gap-2">
-                         🌍 Par pays et ville
+                        🌍 Par pays et ville
                     </h3>
                     <div className="flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-2">
@@ -598,9 +601,9 @@ const DermatologistListPage: React.FC<DermatologistListPageProps> = ({
                                 <option value="other" className="font-bold text-[#00B37E]">Autre</option>
                             </select>
                         </div>
-                        
+
                         {(selectedCityOption === 'other' || selectedCityOption === 'Autre (saisir)' || selectedCityOption === 'Capitale / Ville principale') && (
-                             <input
+                            <input
                                 type="text"
                                 value={customCityInput}
                                 onChange={(e) => setCustomCityInput(e.target.value)}
