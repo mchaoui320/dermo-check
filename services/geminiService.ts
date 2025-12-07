@@ -2,8 +2,8 @@ import { GoogleGenAI, Tool, ToolConfig, RetrievalConfig, LatLng, GenerateContent
 import { getSystemInstruction } from '../constants'; // Import the function
 import { GeminiContent, GeminiImagePart, GeminiTextPart } from '../types'; // Removed GeminiVideoPart
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set");
+if (!import.meta.env.VITE_API_KEY) {
+    throw new Error("VITE_API_KEY environment variable not set");
 }
 
 let ai: GoogleGenAI | null = null; // Initialize lazily
@@ -13,7 +13,7 @@ const getGeminiClient = () => {
     // Recreate the client each time to ensure it uses the most up-to-date API key
     // This addresses the race condition mentioned in the guidelines for Veo video generation,
     // and applies generally for dynamic API key selection.
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY! });
     return ai;
 };
 
